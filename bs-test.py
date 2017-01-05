@@ -5,7 +5,7 @@ import urllib2
 
 from slacker import Slacker
 
-slack = Slacker('xoxb-123655594677-nYOuf2MpUypZaVCIpVNhWdUF')
+slack = Slacker('INSERT SLACK API TOKEN HERE')
 
 STATUSES = ('Confirmed','Likely','Unconfirmed')
 
