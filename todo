@@ -1,0 +1,5 @@
+1. Slack api token in property file
+2. Convert to web server
+	a. Read webpage every 5-10 mins, post updates if any to slack channel
+	b. Respond to keywords from user, like @nhlbot goalies, @nhlbot goalies <date>
+3. Deploy to heroku
