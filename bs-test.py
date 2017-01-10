@@ -7,20 +7,25 @@ import configparser
 
 import os
 from flask import Flask
+from flask.json import jsonify
 
-from slacker import Slacker
+from slackclient import SlackClient
 
 app = Flask(__name__)
 config = configparser.ConfigParser()
 config.read('properties')
 
-slack = Slacker(config['DEFAULT']['SLACK_TOKEN'])
+slack = SlackClient(config['DEFAULT']['SLACK_TOKEN'])
 
 STATUSES = ('Confirmed','Likely','Unconfirmed')
 
 
 @app.route("/")
 def hello():
+	return "Hello!"
+
+@app.route("/bot")
+def bot():
 	page = urllib2.urlopen('http://www2.dailyfaceoff.com/starting-goalies/').read()
 	soup = Soup(page)
 
@@ -29,7 +34,16 @@ def hello():
 	    	goalie_name = name.text
 	    for status in g_a.findAll("dl"):
 	    	goalie_status = [s for s in STATUSES if s in status.text][0]
-	    slack.chat.post_message('#general', goalie_name + ":" + goalie_status)
+	    slack.api_call("chat.postMessage",channel='#general', text=goalie_name + ":" + goalie_status)
+
+	return "Done"
+
+@app.route("/channels")
+def channels():
+	channels_call = slack.api_call("channels.list")
+	if channels_call['ok']:
+		return jsonify({'data':channels_call})
+	return None
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
