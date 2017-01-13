@@ -11,21 +11,20 @@ from flask.json import jsonify
 
 from slackclient import SlackClient
 
-app = Flask(__name__)
-config = configparser.ConfigParser()
-config.read('properties')
+import schedule
+import time
 
-slack = SlackClient(config['DEFAULT']['SLACK_TOKEN'])
+from CodernityDB.database import Database
 
 STATUSES = ('Confirmed','Likely','Unconfirmed')
-
+app = Flask(__name__)
 
 @app.route("/")
 def hello():
 	return "Hello!"
 
-@app.route("/bot")
-def bot():
+@app.route("/refresh")
+def refresh():
 	page = urllib2.urlopen('http://www2.dailyfaceoff.com/starting-goalies/').read()
 	soup = Soup(page)
 
@@ -34,6 +33,8 @@ def bot():
 	    	goalie_name = name.text
 	    for status in g_a.findAll("dl"):
 	    	goalie_status = [s for s in STATUSES if s in status.text][0]
+	    #for team in g_a.findAll('span', attrs={'class':'logo'}):
+	    #	print team.string
 	    slack.api_call("chat.postMessage",channel='#general', text=goalie_name + ":" + goalie_status)
 
 	return "Done"
@@ -44,6 +45,19 @@ def channels():
 	if channels_call['ok']:
 		return jsonify({'data':channels_call})
 	return None
+
+
+#db = Database('./db')
+#db.create()
+config = configparser.ConfigParser()
+config.read('properties')
+slack = SlackClient(config['DEFAULT']['SLACK_TOKEN'])
+
+schedule.every(10).minutes.do(refresh);
+
+while True:
+	schedule.run_pending()
+	time.sleep(1)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
